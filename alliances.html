@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alliances — Fourmizzz S5</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">🐜 Fourmizzz <span class="server-badge">S5</span></div>
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="classement.html">Classement</a>
+    <a href="carte.html">Carte</a>
+    <a href="alliances.html" class="active">Alliances</a>
+  </nav>
+  <div class="update-time" id="update-time"></div>
+</header>
+
+<main>
+  <div class="page-title">Alliances</div>
+  <p class="page-sub" id="sub-txt">Chargement…</p>
+
+  <div id="content" class="loading">Chargement…</div>
+</main>
+
+<footer>
+  Données issues de l'API publique <a href="https://s5.fourmizzz.fr/api/exports/" target="_blank">s5.fourmizzz.fr</a>
+</footer>
+
+<script>
+function fmt(n) { return n == null ? '—' : n.toLocaleString('fr-FR'); }
+
+async function init() {
+  try {
+    const [alliances, players, stats] = await Promise.all([
+      fetch('data/alliances.json').then(r => r.json()),
+      fetch('data/players.json').then(r => r.json()),
+      fetch('data/stats.json').then(r => r.json()),
+    ]);
+
+    document.getElementById('update-time').textContent = `MAJ : ${stats.date}`;
+
+    if (alliances.length === 0) {
+      document.getElementById('sub-txt').textContent = 'Aucune alliance formée pour l\'instant sur S5 — le serveur vient d\'ouvrir !';
+      document.getElementById('content').innerHTML = `
+        <div class="card" style="text-align:center;padding:3rem;color:var(--muted)">
+          <div style="font-size:3rem;margin-bottom:1rem">🐜</div>
+          <p>Le serveur S5 vient d'ouvrir. Les premières alliances apparaîtront bientôt ici.</p>
+          <p style="margin-top:.5rem;font-size:.9rem">Reviens demain — les données sont mises à jour chaque nuit.</p>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('sub-txt').textContent = `${alliances.length} alliance${alliances.length > 1 ? 's' : ''} sur le serveur S5.`;
+
+    // Trier par terrain total décroissant
+    const sorted = [...alliances].sort((a, b) => b.totalField - a.totalField);
+
+    const rows = sorted.map((a, i) => {
+      const diplomacy = a.diplomacy;
+      const pacts = diplomacy.pacts.length > 0
+        ? diplomacy.pacts.map(p => `<span class="alliance-tag" style="color:var(--green)">${p.tag}</span>`).join(' ')
+        : '<span style="color:var(--muted)">—</span>';
+      const wars = diplomacy.wars.length > 0
+        ? diplomacy.wars.map(tag => `<span class="alliance-tag" style="color:var(--red)">${tag}</span>`).join(' ')
+        : '<span style="color:var(--muted)">—</span>';
+
+      return `
+        <tr id="${a.tag}">
+          <td><span class="rank">#${i + 1}</span></td>
+          <td>
+            <span class="alliance-tag" style="font-size:1rem">${a.tag}</span>
+          </td>
+          <td>${a.name}</td>
+          <td>${a.playersCount}</td>
+          <td>${fmt(a.totalField)} cm²</td>
+          <td>${fmt(a.totalBuildingScore)}</td>
+          <td>${fmt(a.totalTechnologyScore)}</td>
+          <td>${a.totalTrophyScore > 0 ? fmt(a.totalTrophyScore) : '<span style="color:var(--muted)">—</span>'}</td>
+          <td>${pacts}</td>
+          <td>${wars}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('content').innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th>
+            <th>Tag</th>
+            <th>Nom</th>
+            <th>Membres</th>
+            <th>Terrain total</th>
+            <th>Bâtiments</th>
+            <th>Techno</th>
+            <th>Trophées</th>
+            <th>Pactes</th>
+            <th>Guerres</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+
+    // Scroll vers l'ancre si présente (ex: #TAG)
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      const el = document.getElementById(hash);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+  } catch (e) {
+    document.getElementById('content').innerHTML = `<div class="error-msg">Erreur : ${e.message}</div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

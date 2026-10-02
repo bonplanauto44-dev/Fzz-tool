@@ -1,0 +1,471 @@
+/* ============================================================
+   Fourmizzz S5 — Feuille de style globale
+   Palette : fond sombre, vert fourmilière, orange pour Octo
+   ============================================================ */
+
+:root {
+  --bg:        #0f1117;
+  --bg2:       #1a1d27;
+  --bg3:       #22263a;
+  --border:    #2e3350;
+  --text:      #e0e4f0;
+  --muted:     #8891b0;
+  --green:     #3ddc84;
+  --green-dim: #1a5c3a;
+  --orange:    #f97316;
+  --orange-dim:#7c2d12;
+  --blue:      #60a5fa;
+  --red:       #f87171;
+  --gold:      #fbbf24;
+  --radius:    8px;
+  --shadow:    0 2px 12px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a { color: var(--green); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Layout ─────────────────────────────────────────────── */
+
+header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  height: 56px;
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--green);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.logo .server-badge {
+  background: var(--green-dim);
+  color: var(--green);
+  font-size: .75rem;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-weight: 600;
+}
+
+nav {
+  display: flex;
+  gap: .25rem;
+  flex: 1;
+  overflow-x: auto;
+}
+nav a {
+  color: var(--muted);
+  padding: .4rem .85rem;
+  border-radius: var(--radius);
+  font-size: .9rem;
+  white-space: nowrap;
+  transition: color .15s, background .15s;
+}
+nav a:hover, nav a.active {
+  color: var(--text);
+  background: var(--bg3);
+  text-decoration: none;
+}
+
+.update-time {
+  color: var(--muted);
+  font-size: .8rem;
+  white-space: nowrap;
+}
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+footer {
+  text-align: center;
+  padding: 2rem;
+  color: var(--muted);
+  font-size: .8rem;
+  border-top: 1px solid var(--border);
+  margin-top: 4rem;
+}
+
+/* ── Cards / Panels ─────────────────────────────────────── */
+
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.card h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 1rem;
+}
+
+/* ── Stat tiles ─────────────────────────────────────────── */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-tile {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem 1rem;
+  text-align: center;
+}
+.stat-tile .val {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  display: block;
+}
+.stat-tile .lbl {
+  font-size: .8rem;
+  color: var(--muted);
+  margin-top: .2rem;
+}
+.stat-tile.highlight { border-color: var(--orange); }
+.stat-tile.highlight .val { color: var(--orange); }
+
+/* ── Tables ─────────────────────────────────────────────── */
+
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .9rem;
+}
+th {
+  text-align: left;
+  padding: .6rem 1rem;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+th:hover { color: var(--text); }
+th.sorted { color: var(--green); }
+th.sorted::after { content: ' ↓'; }
+th.sorted.asc::after { content: ' ↑'; }
+
+td {
+  padding: .55rem 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg3); }
+
+/* Ligne Octo mise en évidence */
+tr.octo td { background: rgba(249,115,22,.07); }
+tr.octo td:first-child { border-left: 3px solid var(--orange); }
+
+.rank { color: var(--muted); font-size: .85rem; width: 3rem; }
+.rank-1 { color: var(--gold); font-weight: 700; }
+.rank-2 { color: #9ca3af; font-weight: 700; }
+.rank-3 { color: #b45309; font-weight: 700; }
+
+.pseudo-link { color: var(--text); font-weight: 500; }
+.pseudo-link:hover { color: var(--green); text-decoration: none; }
+.pseudo-octo { color: var(--orange) !important; font-weight: 700; }
+
+.alliance-tag {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 7px;
+  font-size: .8rem;
+  font-family: monospace;
+  color: var(--blue);
+}
+
+.delta {
+  font-size: .8rem;
+  font-weight: 600;
+}
+.delta.pos { color: var(--green); }
+.delta.neg { color: var(--red); }
+.delta.zero { color: var(--muted); }
+
+.badge-holiday {
+  background: var(--bg3);
+  color: var(--muted);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: .75rem;
+}
+
+/* ── Search bar ─────────────────────────────────────────── */
+
+.search-bar {
+  display: flex;
+  gap: .75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.search-bar input, .search-bar select {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: .55rem .9rem;
+  font-size: .9rem;
+  outline: none;
+  transition: border-color .15s;
+}
+.search-bar input:focus, .search-bar select:focus {
+  border-color: var(--green);
+}
+.search-bar input { flex: 1; min-width: 200px; }
+.search-bar select option { background: var(--bg2); }
+
+/* ── Page title ─────────────────────────────────────────── */
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: .3rem;
+}
+.page-sub {
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+
+/* ── Octo hero (accueil) ─────────────────────────────────── */
+
+.octo-hero {
+  background: var(--bg2);
+  border: 1px solid var(--orange);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.octo-hero .avatar {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+.octo-hero .info h3 {
+  color: var(--orange);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.octo-hero .info .sub { color: var(--muted); font-size: .9rem; }
+.octo-ranks {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+.octo-rank-item {
+  text-align: center;
+  min-width: 70px;
+}
+.octo-rank-item .rv {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--orange);
+  display: block;
+}
+.octo-rank-item .rl {
+  font-size: .75rem;
+  color: var(--muted);
+}
+
+/* ── Top grid (accueil) ─────────────────────────────────── */
+
+.top-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* ── Carte ───────────────────────────────────────────────── */
+
+#map-container {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  height: 70vh;
+  min-height: 400px;
+  cursor: grab;
+}
+#map-container:active { cursor: grabbing; }
+
+#map-svg { width: 100%; height: 100%; }
+
+.map-dot { transition: r .1s; }
+.map-dot:hover { r: 5; }
+
+.map-tooltip {
+  position: absolute;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .6rem .9rem;
+  font-size: .85rem;
+  pointer-events: none;
+  display: none;
+  z-index: 10;
+  max-width: 220px;
+  box-shadow: var(--shadow);
+}
+
+.map-controls {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.map-controls label { color: var(--muted); font-size: .85rem; }
+.btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: .4rem .85rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: .85rem;
+  transition: border-color .15s;
+}
+.btn:hover { border-color: var(--green); }
+
+/* ── Profil joueur ──────────────────────────────────────── */
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+.profile-avatar { font-size: 3rem; }
+.profile-name {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+.profile-name.is-octo { color: var(--orange); }
+.profile-meta { color: var(--muted); }
+
+.profile-ranks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.profile-rank-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+}
+.profile-rank-card .num {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--green);
+}
+.profile-rank-card.primary .num { color: var(--orange); }
+.profile-rank-card .lbl { color: var(--muted); font-size: .8rem; }
+
+.chart-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.chart-wrap h3 {
+  font-size: .9rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 1rem;
+}
+
+/* ── Loading / error ─────────────────────────────────────── */
+
+.loading {
+  text-align: center;
+  padding: 4rem;
+  color: var(--muted);
+}
+.loading::before {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin: 0 auto 1rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error-msg {
+  background: rgba(248,113,113,.1);
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+  padding: 1rem 1.5rem;
+  color: var(--red);
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  header { gap: 1rem; }
+  .logo .server-badge { display: none; }
+  main { padding: 1rem; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .octo-hero { flex-direction: column; align-items: flex-start; }
+  .octo-ranks { margin-left: 0; }
+  .top-grid { grid-template-columns: 1fr; }
+  td, th { padding: .45rem .6rem; }
+}

@@ -1,0 +1,40 @@
+name: Premier déploiement (seed)
+
+# À lancer UNE FOIS manuellement après avoir créé le repo
+# pour générer les données initiales et déployer le site.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Récupérer les données S5
+        run: node scripts/fetch-data.js
+
+      - name: Commit les données initiales
+        run: |
+          git config user.name  "fourmizzz-bot"
+          git config user.email "bot@fourmizzz-s5.fr"
+          git add public/data/
+          git commit -m "data: seed initial S5" || echo "Rien à committer"
+          git push || echo "Push ignoré"
+
+      - name: Déployer sur GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          keep_files: true

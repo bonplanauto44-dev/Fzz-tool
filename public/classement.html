@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classement — Fourmizzz S5</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">🐜 Fourmizzz <span class="server-badge">S5</span></div>
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="classement.html" class="active">Classement</a>
+    <a href="carte.html">Carte</a>
+    <a href="alliances.html">Alliances</a>
+  </nav>
+  <div class="update-time" id="update-time"></div>
+</header>
+
+<main>
+  <div class="page-title">Classement général</div>
+  <p class="page-sub">Tous les joueurs du serveur S5, triables par critère.</p>
+
+  <div class="search-bar">
+    <input type="text" id="search" placeholder="Rechercher un joueur…">
+    <select id="filter-alliance">
+      <option value="">Toutes les alliances</option>
+      <option value="__none__">Sans alliance</option>
+    </select>
+    <select id="sort-by">
+      <option value="rankField">Terrain de chasse</option>
+      <option value="rankBuild">Bâtiments</option>
+      <option value="rankTech">Technologie</option>
+      <option value="rankTrophy">Trophées</option>
+    </select>
+  </div>
+
+  <div id="content" class="loading">Chargement…</div>
+</main>
+
+<footer>
+  Données issues de l'API publique <a href="https://s5.fourmizzz.fr/api/exports/" target="_blank">s5.fourmizzz.fr</a>
+</footer>
+
+<script>
+const OCTO_PSEUDO = 'Octo';
+let allPlayers = [];
+let currentSort = 'rankField';
+
+function fmt(n) { return n == null ? '—' : n.toLocaleString('fr-FR'); }
+function deltaHtml(d) {
+  if (d == null) return '';
+  if (d > 0) return `<span class="delta pos">+${fmt(d)}</span>`;
+  if (d < 0) return `<span class="delta neg">${fmt(d)}</span>`;
+  return `<span class="delta zero">–</span>`;
+}
+function rankBadge(r) {
+  if (r === 1) return `<span class="rank rank-1">#1</span>`;
+  if (r === 2) return `<span class="rank rank-2">#2</span>`;
+  if (r === 3) return `<span class="rank rank-3">#3</span>`;
+  return `<span class="rank">#${r}</span>`;
+}
+
+function renderTable(players) {
+  if (players.length === 0) {
+    document.getElementById('content').innerHTML = '<p style="color:var(--muted);text-align:center;padding:3rem">Aucun joueur trouvé.</p>';
+    return;
+  }
+  const sortKey = currentSort;
+  const rows = players.map(p => {
+    const isOcto = p.pseudo === OCTO_PSEUDO;
+    const alliance = p.alliance
+      ? `<a href="alliances.html#${p.alliance}" class="alliance-tag">${p.alliance}</a>`
+      : `<span style="color:var(--muted);font-size:.85rem">—</span>`;
+    const holiday = p.onHoliday ? ` <span class="badge-holiday">🏖</span>` : '';
+    const colonised = p.masterPlayerId ? ` <span class="badge-holiday" title="Colonisé">🏴</span>` : '';
+    return `
+      <tr class="${isOcto ? 'octo' : ''}">
+        <td>${rankBadge(p.rankField)}</td>
+        <td>
+          <a href="joueur.html?p=${encodeURIComponent(p.pseudo)}"
+             class="pseudo-link ${isOcto ? 'pseudo-octo' : ''}">${p.pseudo}</a>${holiday}${colonised}
+        </td>
+        <td>${alliance}</td>
+        <td>${fmt(p.field)} cm² ${deltaHtml(p.deltaField)}</td>
+        <td>${fmt(p.buildingScore)} ${deltaHtml(p.deltaBuild)}</td>
+        <td>${fmt(p.technologyScore)}</td>
+        <td>${p.trophyScore > 0 ? fmt(p.trophyScore) : '<span style="color:var(--muted)">—</span>'}</td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th class="sorted" data-sort="rankField"># Terrain</th>
+          <th>Joueur</th>
+          <th>Alliance</th>
+          <th data-sort="rankField">Terrain (cm²)</th>
+          <th data-sort="rankBuild">Bâtiments</th>
+          <th data-sort="rankTech">Technologie</th>
+          <th data-sort="rankTrophy">Trophées</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="color:var(--muted);font-size:.85rem;margin-top:.75rem;text-align:right">${players.length} joueur${players.length > 1 ? 's' : ''} affichés</p>
+  `;
+
+  // Tri cliquable
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    if (th.dataset.sort === currentSort) {
+      th.classList.add('sorted');
+    }
+    th.addEventListener('click', () => {
+      currentSort = th.dataset.sort;
+      applyFilters();
+    });
+  });
+}
+
+function applyFilters() {
+  const q        = document.getElementById('search').value.toLowerCase();
+  const alliance = document.getElementById('filter-alliance').value;
+
+  let filtered = allPlayers.filter(p => {
+    if (q && !p.pseudo.toLowerCase().includes(q)) return false;
+    if (alliance === '__none__' && p.alliance !== null) return false;
+    if (alliance && alliance !== '__none__' && p.alliance !== alliance) return false;
+    return true;
+  });
+
+  filtered.sort((a, b) => a[currentSort] - b[currentSort]);
+  renderTable(filtered);
+}
+
+async function init() {
+  try {
+    const [players, stats] = await Promise.all([
+      fetch('data/players.json').then(r => r.json()),
+      fetch('data/stats.json').then(r => r.json()),
+    ]);
+    allPlayers = players;
+    document.getElementById('update-time').textContent = `MAJ : ${stats.date}`;
+
+    // Peupler le filtre alliances
+    const alliances = [...new Set(players.map(p => p.alliance).filter(Boolean))].sort();
+    const sel = document.getElementById('filter-alliance');
+    alliances.forEach(tag => {
+      const opt = document.createElement('option');
+      opt.value = tag;
+      opt.textContent = tag;
+      sel.appendChild(opt);
+    });
+
+    document.getElementById('search').addEventListener('input', applyFilters);
+    document.getElementById('filter-alliance').addEventListener('change', applyFilters);
+    document.getElementById('sort-by').addEventListener('change', e => {
+      currentSort = e.target.value;
+      applyFilters();
+    });
+
+    applyFilters();
+  } catch (e) {
+    document.getElementById('content').innerHTML = `<div class="error-msg">Erreur : ${e.message}</div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

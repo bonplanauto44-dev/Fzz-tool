@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil joueur — Fourmizzz S5</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    .coords-badge {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 6px; padding: 3px 10px;
+      font-family: monospace; font-size: .9rem; color: var(--blue);
+    }
+    .search-player {
+      display: flex; gap: .5rem; margin-bottom: 2rem;
+    }
+    .search-player input {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--text);
+      padding: .55rem .9rem; font-size: .9rem; outline: none; flex: 1;
+    }
+    .search-player input:focus { border-color: var(--green); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🐜 Fourmizzz <span class="server-badge">S5</span></div>
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="classement.html">Classement</a>
+    <a href="carte.html">Carte</a>
+    <a href="alliances.html">Alliances</a>
+  </nav>
+  <div class="update-time" id="update-time"></div>
+</header>
+
+<main>
+  <div class="search-player">
+    <input type="text" id="search-input" placeholder="Chercher un joueur par pseudo…">
+    <button class="btn" id="search-btn">Voir</button>
+  </div>
+  <div id="content" class="loading">Chargement…</div>
+</main>
+
+<footer>
+  Données issues de l'API publique <a href="https://s5.fourmizzz.fr/api/exports/" target="_blank">s5.fourmizzz.fr</a>
+</footer>
+
+<script>
+const OCTO_PSEUDO = 'Octo';
+
+function fmt(n) { return n == null ? '—' : n.toLocaleString('fr-FR'); }
+function rankColor(r) {
+  if (r <= 3)   return '#fbbf24';
+  if (r <= 10)  return '#3ddc84';
+  if (r <= 50)  return '#60a5fa';
+  return 'var(--text)';
+}
+
+function renderProfile(player, history, allPlayers) {
+  const isOcto = player.pseudo === OCTO_PSEUDO;
+
+  // Historique de CE joueur sur les 30 derniers jours
+  // Note: pour l'instant on montre les valeurs du jour courant si history ne contient pas de per-player data
+  // Une future version pourrait stocker l'historique individuel
+
+  const content = document.getElementById('content');
+  const alliance = player.alliance
+    ? `<a href="alliances.html#${player.alliance}" class="alliance-tag" style="font-size:1rem">${player.alliance}</a>`
+    : '<span style="color:var(--muted)">Sans alliance</span>';
+
+  content.innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar">🐜</div>
+      <div>
+        <div class="profile-name ${isOcto ? 'is-octo' : ''}">${player.pseudo}</div>
+        <div class="profile-meta">
+          ${alliance} &nbsp;·&nbsp;
+          <span class="coords-badge">(${player.x}, ${player.y})</span>
+          ${player.onHoliday ? ' &nbsp;·&nbsp; 🏖 Vacances' : ''}
+          ${player.masterPlayerId ? ' &nbsp;·&nbsp; 🏴 Colonisé' : ''}
+        </div>
+      </div>
+      <a href="carte.html" class="btn" style="margin-left:auto">Voir sur la carte →</a>
+    </div>
+
+    <div class="profile-ranks">
+      <div class="profile-rank-card primary">
+        <div class="num" style="color:${rankColor(player.rankField)}">#${player.rankField}</div>
+        <div class="lbl">Rang terrain</div>
+        ${player.deltaRankField != null && player.deltaRankField !== 0
+          ? `<div style="font-size:.8rem;color:${player.deltaRankField > 0 ? 'var(--green)' : 'var(--red)'}">
+              ${player.deltaRankField > 0 ? '▲' : '▼'}${Math.abs(player.deltaRankField)} places</div>`
+          : ''}
+      </div>
+      <div class="profile-rank-card">
+        <div class="num" style="color:${rankColor(player.rankBuild)}">#${player.rankBuild}</div>
+        <div class="lbl">Rang bâtiments</div>
+      </div>
+      <div class="profile-rank-card">
+        <div class="num" style="color:${rankColor(player.rankTech)}">#${player.rankTech}</div>
+        <div class="lbl">Rang technologie</div>
+      </div>
+      <div class="profile-rank-card">
+        <div class="num">${player.trophyScore > 0 ? `#${player.rankTrophy}` : '—'}</div>
+        <div class="lbl">Rang trophées</div>
+      </div>
+    </div>
+
+    <div class="stat-grid" style="margin-bottom:2rem">
+      <div class="stat-tile ${isOcto ? 'highlight' : ''}">
+        <span class="val">${fmt(player.field)}</span>
+        <div class="lbl">Terrain de chasse (cm²)
+          ${player.deltaField != null && player.deltaField !== 0
+            ? `<br><span style="color:${player.deltaField > 0 ? 'var(--green)' : 'var(--red)'}">
+                ${player.deltaField > 0 ? '+' : ''}${fmt(player.deltaField)} aujourd'hui</span>`
+            : ''}</div>
+      </div>
+      <div class="stat-tile">
+        <span class="val">${fmt(player.buildingScore)}</span>
+        <div class="lbl">Score bâtiments</div>
+      </div>
+      <div class="stat-tile">
+        <span class="val">${fmt(player.technologyScore)}</span>
+        <div class="lbl">Score technologie</div>
+      </div>
+      <div class="stat-tile">
+        <span class="val">${player.trophyScore > 0 ? fmt(player.trophyScore) : '—'}</span>
+        <div class="lbl">Score trophées</div>
+      </div>
+    </div>
+
+    ${history.length > 1 ? `
+    <div class="chart-wrap">
+      <h3>Progression du terrain (30 derniers jours)</h3>
+      <canvas id="chart-field" height="100"></canvas>
+    </div>` : `
+    <div class="card" style="text-align:center;color:var(--muted);padding:2rem">
+      L'historique de progression sera disponible après quelques jours de collecte.
+    </div>`}
+  `;
+
+  // Graphique si historique disponible
+  if (history.length > 1) {
+    const ctx = document.getElementById('chart-field').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: history.map(h => h.date).reverse(),
+        datasets: [{
+          label: 'Terrain (cm²)',
+          data: history.map(h => h.maxField).reverse(), // données globales pour l'instant
+          borderColor: isOcto ? '#f97316' : '#3ddc84',
+          backgroundColor: isOcto ? 'rgba(249,115,22,.1)' : 'rgba(61,220,132,.1)',
+          tension: 0.3,
+          fill: true,
+          pointRadius: 3,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#8891b0' }, grid: { color: '#2e3350' } },
+          y: { ticks: { color: '#8891b0' }, grid: { color: '#2e3350' } },
+        }
+      }
+    });
+  }
+}
+
+function navigateTo(pseudo) {
+  if (!pseudo.trim()) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set('p', pseudo.trim());
+  window.location.href = url.toString();
+}
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const pseudo = params.get('p') || OCTO_PSEUDO;
+
+  document.getElementById('search-input').value = pseudo;
+  document.getElementById('search-btn').addEventListener('click', () =>
+    navigateTo(document.getElementById('search-input').value));
+  document.getElementById('search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') navigateTo(e.target.value);
+  });
+
+  try {
+    const [players, stats, history] = await Promise.all([
+      fetch('data/players.json').then(r => r.json()),
+      fetch('data/stats.json').then(r => r.json()),
+      fetch('data/history.json').then(r => r.json()).catch(() => []),
+    ]);
+
+    document.getElementById('update-time').textContent = `MAJ : ${stats.date}`;
+    document.title = `${pseudo} — Fourmizzz S5`;
+
+    const player = players.find(p => p.pseudo.toLowerCase() === pseudo.toLowerCase());
+    if (!player) {
+      // Suggestions
+      const suggestions = players
+        .filter(p => p.pseudo.toLowerCase().includes(pseudo.toLowerCase()))
+        .slice(0, 5);
+      document.getElementById('content').innerHTML = `
+        <div class="error-msg">Joueur "${pseudo}" introuvable sur S5.</div>
+        ${suggestions.length ? `
+          <div style="margin-top:1.5rem">
+            <p style="color:var(--muted);margin-bottom:.75rem">Suggestions :</p>
+            ${suggestions.map(p =>
+              `<a href="joueur.html?p=${encodeURIComponent(p.pseudo)}"
+                 style="display:block;padding:.5rem 0;color:var(--green)">${p.pseudo}</a>`
+            ).join('')}
+          </div>` : ''}`;
+      return;
+    }
+
+    renderProfile(player, history, players);
+  } catch (e) {
+    document.getElementById('content').innerHTML = `<div class="error-msg">Erreur : ${e.message}</div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

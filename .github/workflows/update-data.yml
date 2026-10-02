@@ -1,0 +1,45 @@
+name: Mise à jour données S5
+
+on:
+  schedule:
+    # 23h15 UTC = toujours après le job d'export Fourmizzz (22h00 UTC été / 23h00 UTC hiver)
+    - cron: '15 23 * * *'
+  workflow_dispatch: # déclenchement manuel possible
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Récupérer les données S5
+        run: node scripts/fetch-data.js
+
+      - name: Commit et push si changements
+        run: |
+          git config user.name  "fourmizzz-bot"
+          git config user.email "bot@fourmizzz-s5.fr"
+          git add public/data/
+          if git diff --staged --quiet; then
+            echo "Aucun changement, rien à committer."
+          else
+            VERSION=$(node -e "const h=require('./public/data/history.json'); console.log(h[0].version)")
+            git commit -m "data: mise à jour $VERSION"
+            git push
+          fi
+
+      - name: Déployer sur GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          keep_files: true

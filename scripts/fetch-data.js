@@ -19,6 +19,10 @@ function fetchJSON(url) {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https') ? https : http;
     client.get(url, (res) => {
+      if (res.statusCode === 502 || res.statusCode === 503) {
+        reject(new Error(`SERVEUR_INDISPONIBLE:${res.statusCode}`));
+        return;
+      }
       if (res.statusCode !== 200) {
         reject(new Error(`HTTP ${res.statusCode} pour ${url}`));
         return;
@@ -180,6 +184,17 @@ async function main() {
 }
 
 main().catch(err => {
+  if (err.message.startsWith('SERVEUR_INDISPONIBLE')) {
+    // L'API Fourmizzz est temporairement down (502/503)
+    // Si des données locales existent, on sort proprement — le déploiement utilisera ces données
+    const hasData = fs.existsSync(path.join(PUBLIC_DATA, 'players.json'));
+    if (hasData) {
+      console.warn(`⚠️  API indisponible (${err.message}) — données existantes conservées, déploiement normal.`);
+      process.exit(0);
+    }
+    console.error(`ERREUR: API indisponible et aucune donnée locale — ${err.message}`);
+    process.exit(1);
+  }
   console.error('ERREUR:', err.message);
   process.exit(1);
 });
